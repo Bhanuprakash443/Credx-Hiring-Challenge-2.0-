@@ -8,6 +8,7 @@ RUN npm run build
 
 # Stage 2: Build the Spring Boot backend
 FROM gradle:8.7-jdk21 AS backend-builder
+USER root
 WORKDIR /app
 # Copy the backend source files first
 COPY backend /app/backend

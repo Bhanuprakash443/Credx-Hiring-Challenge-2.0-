@@ -11,7 +11,7 @@ layout.buildDirectory.set(layout.projectDirectory.dir('build_recruitment'))
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(24)
+		languageVersion = JavaLanguageVersion.of(21)
 	}
 }
 
