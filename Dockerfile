@@ -15,7 +15,7 @@ COPY backend /app/backend
 # Copy the compiled Angular static assets from Stage 1 into the backend resources folder
 COPY --from=frontend-builder /app/backend/src/main/resources/static /app/backend/src/main/resources/static
 WORKDIR /app/backend
-RUN chmod +x gradlew
+RUN tr -d '\r' < gradlew > gradlew.tmp && mv gradlew.tmp gradlew && chmod +x gradlew
 RUN ./gradlew bootJar --no-daemon
 
 # Stage 3: Run the Spring Boot application
