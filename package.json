@@ -1,0 +1,10 @@
+{
+  "name": "campus-recruitment-portal",
+  "version": "1.0.0",
+  "description": "Monorepo build coordinator for Campus Recruiting Portal",
+  "scripts": {
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "build:backend": "cd backend && chmod +x gradlew && ./gradlew bootJar",
+    "build": "npm run build:frontend && npm run build:backend"
+  }
+}

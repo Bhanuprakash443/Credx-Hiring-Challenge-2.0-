@@ -1,0 +1,44 @@
+# Prerequisites
+*.class
+*.log
+*.lock
+
+# Mobile Tools Resources
+.targets
+.targets.bat
+
+# Package Files
+*.jar
+*.war
+*.ear
+
+# Gradle Files
+.gradle
+build/
+build_recruitment/
+
+# Angular Files
+frontend/node_modules/
+frontend/.angular/
+frontend/dist/
+frontend/.vscode/
+
+# H2 Database files
+*.mv.db
+*.trace.db
+
+# IDE Files
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+.vscode/
+
+# System Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store

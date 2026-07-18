@@ -1,0 +1,247 @@
+<div class="dashboard-actions mb-4" style="display: flex; justify-content: flex-end; margin-bottom: 2rem;">
+  <button class="btn btn-primary" (click)="openPostModal()">
+    ➕ Post a New Role
+  </button>
+</div>
+
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner d-inline-block"></div>
+  <p class="mt-2 text-muted">Loading company postings...</p>
+</div>
+
+<div *ngIf="!loading">
+  <!-- My Postings Table -->
+  <div class="glass-card mb-4" style="padding: 2rem; margin-bottom: 2rem;">
+    <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; margin-bottom: 1.2rem;">
+      💼 My Posted Roles
+    </h3>
+
+    <div *ngIf="!jobs.length" class="text-center py-4 text-muted">
+      You haven't posted any jobs yet. Click "Post a New Role" to get started!
+    </div>
+
+    <div *ngIf="jobs.length" class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Role Title</th>
+            <th>Location</th>
+            <th>Min CGPA</th>
+            <th>Salary</th>
+            <th>Deadline</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let job of jobs">
+            <td style="font-weight: 600;">{{ job.title }}</td>
+            <td>📍 {{ job.location }}</td>
+            <td>🎓 {{ job.minCgpa }}</td>
+            <td>💼 {{ job.salary }}</td>
+            <td>📅 {{ job.deadline | date:'mediumDate' }}</td>
+            <td>
+              <span class="badge" [ngClass]="{
+                'badge-success': job.status === 'APPROVED',
+                'badge-warning': job.status === 'PENDING',
+                'badge-danger': job.status === 'REJECTED',
+                'badge-neutral': job.status === 'CLOSED'
+              }">{{ job.status }}</span>
+            </td>
+            <td>
+              <button 
+                *ngIf="job.status === 'APPROVED'" 
+                class="btn" 
+                (click)="closeJob(job.id)" 
+                style="background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: var(--danger); padding: 0.3rem 0.6rem; font-size: 0.8rem;"
+              >
+                Close Role
+              </button>
+              <span *ngIf="job.status === 'PENDING'" class="text-muted" style="font-size: 0.8rem; font-style: italic;">
+                Awaiting Admin Approval
+              </span>
+              <span *ngIf="job.status === 'CLOSED'" class="text-muted" style="font-size: 0.8rem;">
+                Applications Closed
+              </span>
+              <span *ngIf="job.status === 'REJECTED'" class="text-muted" style="font-size: 0.8rem; color: var(--danger);">
+                Rejected by Admin
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Applicants Table -->
+  <div class="glass-card" style="padding: 2rem;">
+    <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; margin-bottom: 1.2rem;">
+      👥 Applicants Directory
+    </h3>
+
+    <div *ngIf="!applications.length" class="text-center py-4 text-muted">
+      No applications received for your job postings yet.
+    </div>
+
+    <div *ngIf="applications.length" class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Applied Role</th>
+            <th>Student Name</th>
+            <th>CGPA</th>
+            <th>Roll Number</th>
+            <th>Resume Summary</th>
+            <th>Status</th>
+            <th>Decision / Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let app of applications">
+            <td style="font-weight: 600; color: var(--primary);">{{ app.jobPosting?.title }}</td>
+            <td>
+              <div>{{ app.student?.name }}</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">{{ app.student?.email }}</div>
+            </td>
+            <td><span class="badge badge-info">{{ app.student?.cgpa }}</span></td>
+            <td>{{ app.student?.rollNumber }}</td>
+            <td style="max-width: 250px; font-size: 0.8rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" [title]="app.student?.resumeText">
+              {{ app.student?.resumeText }}
+            </td>
+            <td>
+              <span class="badge" [ngClass]="{
+                'badge-success': app.status === 'SELECTED',
+                'badge-info': app.status === 'SHORTLISTED',
+                'badge-warning': app.status === 'APPLIED',
+                'badge-danger': app.status === 'REJECTED'
+              }">{{ app.status }}</span>
+            </td>
+            <td>
+              <div *ngIf="app.status === 'APPLIED' || app.status === 'SHORTLISTED'" style="display: flex; gap: 0.4rem;">
+                <button 
+                  *ngIf="app.status === 'APPLIED'" 
+                  class="btn" 
+                  (click)="openStatusModal(app, 'SHORTLISTED')" 
+                  style="background: rgba(6, 182, 212, 0.15); border: 1px solid var(--info); color: #fff; padding: 0.3rem 0.6rem; font-size: 0.8rem;"
+                >
+                  Shortlist
+                </button>
+                <button 
+                  class="btn" 
+                  (click)="openStatusModal(app, 'SELECTED')" 
+                  style="background: rgba(16, 185, 129, 0.15); border: 1px solid var(--success); color: #fff; padding: 0.3rem 0.6rem; font-size: 0.8rem;"
+                >
+                  Select (Place)
+                </button>
+                <button 
+                  class="btn" 
+                  (click)="openStatusModal(app, 'REJECTED')" 
+                  style="background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: #fff; padding: 0.3rem 0.6rem; font-size: 0.8rem;"
+                >
+                  Reject
+                </button>
+              </div>
+              <div *ngIf="app.status === 'SELECTED' || app.status === 'REJECTED'" class="text-muted" style="font-size: 0.8rem;">
+                Decision Finalized 
+                <div *ngIf="app.notes" style="font-size: 0.75rem; font-style: italic; color: var(--text-dim);">"{{ app.notes }}"</div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Post Job Modal -->
+<div *ngIf="showPostModal" class="modal-overlay" (click)="closePostModal()">
+  <div class="glass-card modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Post a Recruiting Role</h3>
+      <button class="btn-close" (click)="closePostModal()">&times;</button>
+    </div>
+    
+    <form [formGroup]="jobForm" (ngSubmit)="onSubmitJob()">
+      <div class="form-group">
+        <label for="title">Role Title</label>
+        <input type="text" id="title" class="form-control" formControlName="title" placeholder="e.g. Frontend Engineer Intern" style="padding-left: 1rem;" />
+      </div>
+
+      <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div>
+          <label for="location">Location</label>
+          <input type="text" id="location" class="form-control" formControlName="location" placeholder="e.g. Remote / Chicago" style="padding-left: 1rem;" />
+        </div>
+        <div>
+          <label for="salary">Salary / Package</label>
+          <input type="text" id="salary" class="form-control" formControlName="salary" placeholder="e.g. $85,000/yr" style="padding-left: 1rem;" />
+        </div>
+      </div>
+
+      <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div>
+          <label for="minCgpa">Min CGPA Requirement</label>
+          <input type="number" step="0.1" id="minCgpa" class="form-control" formControlName="minCgpa" style="padding-left: 1rem;" />
+        </div>
+        <div>
+          <label for="deadline">Application Deadline</label>
+          <input type="date" id="deadline" class="form-control" formControlName="deadline" style="padding-left: 1rem;" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Job Description</label>
+        <textarea id="description" class="form-control" formControlName="description" rows="4" placeholder="Enter key responsibilities and expectations..." style="padding-left: 1rem;"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="requirements">Core Skills & Requirements (Optional)</label>
+        <textarea id="requirements" class="form-control" formControlName="requirements" rows="2" placeholder="e.g. Strong SQL, familiarity with Java, good teamwork..." style="padding-left: 1rem;"></textarea>
+      </div>
+
+      <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+        <button type="button" class="btn" (click)="closePostModal()" style="background: rgba(255, 255, 255, 0.05);">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="jobForm.invalid">
+          Submit Posting
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Status Notes Modal -->
+<div *ngIf="showStatusModal" class="modal-overlay" (click)="closeStatusModal()">
+  <div class="glass-card modal-content" (click)="$event.stopPropagation()" style="max-width: 450px;">
+    <div class="modal-header">
+      <h3>Candidate Action Details</h3>
+      <button class="btn-close" (click)="closeStatusModal()">&times;</button>
+    </div>
+    
+    <div style="display: flex; flex-direction: column; gap: 1.2rem;">
+      <p style="font-size: 0.95rem;">
+        You are changing the application of <strong style="color: var(--primary);">{{ selectedApplication?.student?.name }}</strong> 
+        to status: <strong style="text-transform: uppercase;" [ngClass]="{
+          'color-success': targetStatus === 'SELECTED',
+          'color-info': targetStatus === 'SHORTLISTED',
+          'color-danger': targetStatus === 'REJECTED'
+        }">{{ targetStatus }}</strong>.
+      </p>
+
+      <div class="form-group">
+        <label for="statusNotes">Interview Feedback & Notes</label>
+        <textarea id="statusNotes" class="form-control" [(ngModel)]="statusNotes" rows="3" placeholder="e.g. Cleared round 2 technical review. Demonstrates strong backend logic." style="padding-left: 1rem;"></textarea>
+      </div>
+
+      <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 0.5rem;">
+        <button class="btn" (click)="closeStatusModal()" style="background: rgba(255, 255, 255, 0.05); font-size: 0.9rem; padding: 0.5rem 1rem;">
+          Cancel
+        </button>
+        <button class="btn btn-primary" (click)="submitStatusUpdate()" style="font-size: 0.9rem; padding: 0.5rem 1rem;">
+          Confirm Action
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

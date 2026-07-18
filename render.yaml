@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: campus-recruiting-portal
+    env: java
+    plan: free
+    buildCommand: "npm run build"
+    startCommand: "java -jar backend/build/libs/demo-0.0.1-SNAPSHOT.jar"
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: recruitment-db
+          property: jdbcConnectionString
+      - key: SPRING_DATASOURCE_DRIVER
+        value: org.postgresql.Driver
+      - key: SPRING_JPA_DIALECT
+        value: org.hibernate.dialect.PostgreSQLDialect
+
+databases:
+  - name: recruitment-db
+    plan: free

@@ -1,0 +1,291 @@
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner d-inline-block"></div>
+  <p class="mt-2 text-muted">Searching for active recruiting roles...</p>
+</div>
+
+<div *ngIf="!loading">
+  <!-- Search & Filters -->
+  <div class="glass-card mb-4" style="padding: 1.5rem; margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+    <div style="flex: 1; min-width: 250px;">
+      <label style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Search roles</label>
+      <div class="input-wrapper">
+        <span class="input-icon">🔍</span>
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm" 
+          (input)="filterJobs()" 
+          placeholder="Search by role, company, or location..." 
+          style="padding-left: 2.5rem;"
+        />
+      </div>
+    </div>
+    
+    <div style="width: 180px;">
+      <label style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Max CGPA Requirement</label>
+      <select [(ngModel)]="cgpaFilter" (change)="filterJobs()" class="form-control" style="padding-left: 1rem;">
+        <option value="">All Roles</option>
+        <option value="6.0"><= 6.0 CGPA</option>
+        <option value="7.0"><= 7.0 CGPA</option>
+        <option value="8.0"><= 8.0 CGPA</option>
+        <option value="9.0"><= 9.0 CGPA</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Job Board Grid -->
+  <div class="dashboard-section mb-4" style="margin-bottom: 3rem;">
+    <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; margin-bottom: 1.2rem;">
+      💼 Available Approved Job Postings
+    </h3>
+
+    <div *ngIf="!filteredJobs.length" class="text-center py-5 text-muted glass-card">
+      No approved recruiting roles match your filters. Check back later!
+    </div>
+
+    <div class="grid-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
+      <div *ngFor="let job of filteredJobs" class="glass-card" style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem; border-radius: var(--radius-md);">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <span class="badge badge-info" style="font-size: 0.7rem;">{{ job.company?.name }}</span>
+            <span class="badge badge-success" style="font-size: 0.65rem;">Approved</span>
+          </div>
+          <h4 style="font-family: var(--font-display); font-size: 1.2rem; margin-top: 0.5rem; font-weight: 600;">{{ job.title }}</h4>
+          <p style="color: var(--text-muted); font-size: 0.85rem; height: 50px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+            {{ job.description }}
+          </p>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.02); padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); font-size: 0.8rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+          <div>📍 {{ job.location }}</div>
+          <div>💰 {{ job.salary }}</div>
+          <div>🎓 Min CGPA: <strong>{{ job.minCgpa }}</strong></div>
+          <div style="color: var(--warning);">📅 {{ job.deadline | date:'shortDate' }}</div>
+        </div>
+
+        <div>
+          <button 
+            *ngIf="!hasApplied(job.id)" 
+            class="btn btn-primary btn-block" 
+            (click)="openJobDetails(job)"
+            style="font-size: 0.85rem; padding: 0.6rem;"
+          >
+            Review & Apply
+          </button>
+          
+          <div *ngIf="hasApplied(job.id)" style="display: flex; gap: 0.5rem; width: 100%;">
+            <button class="btn btn-block" disabled style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); color: var(--success); font-size: 0.85rem; padding: 0.6rem;">
+              ✓ Applied
+            </button>
+            <button class="btn" (click)="openAppDetails(getApplicationForJob(job.id))" style="background: rgba(255, 255, 255, 0.05); font-size: 0.85rem; padding: 0.6rem;">
+              Track
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Applications -->
+  <div class="glass-card" style="padding: 2rem;">
+    <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; margin-bottom: 1.2rem;">
+      📅 My Job Application History
+    </h3>
+
+    <div *ngIf="!applications.length" class="text-center py-4 text-muted">
+      You haven't applied to any job postings yet. Select a role from the board to start!
+    </div>
+
+    <div *ngIf="applications.length" class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Role Title</th>
+            <th>Company</th>
+            <th>Submission Date</th>
+            <th>Your Application Status</th>
+            <th>Interviewer Feedback</th>
+            <th>Track progress</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let app of applications">
+            <td style="font-weight: 600;">{{ app.jobPosting?.title }}</td>
+            <td>{{ app.jobPosting?.company?.name }}</td>
+            <td>{{ app.appliedAt | date:'mediumDate' }}</td>
+            <td>
+              <span class="badge" [ngClass]="{
+                'badge-success': app.status === 'SELECTED',
+                'badge-info': app.status === 'SHORTLISTED',
+                'badge-warning': app.status === 'APPLIED',
+                'badge-danger': app.status === 'REJECTED'
+              }">{{ app.status }}</span>
+            </td>
+            <td style="font-style: italic; font-size: 0.8rem; color: var(--text-muted); max-width: 200px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+              {{ app.notes || 'Awaiting feedback...' }}
+            </td>
+            <td>
+              <button class="btn" (click)="openAppDetails(app)" style="background: rgba(255, 255, 255, 0.05); padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+                Track Status
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Job Apply Details Modal -->
+<div *ngIf="selectedJob" class="modal-overlay" (click)="closeJobModal()">
+  <div class="glass-card modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Recruiting Position Details</h3>
+      <button class="btn-close" (click)="closeJobModal()">&times;</button>
+    </div>
+    
+    <div class="modal-body" style="display: flex; flex-direction: column; gap: 1.2rem;">
+      <div>
+        <h2 style="font-family: var(--font-display); font-size: 1.4rem;">{{ selectedJob.title }}</h2>
+        <p style="color: var(--primary); font-weight: 500;">{{ selectedJob.company?.name }}</p>
+      </div>
+
+      <!-- Eligibility Warnings -->
+      <!-- Rahul: 8.5, Amit: 7.8, Priya: 6.2 -->
+      <div 
+        *ngIf="((studentProfile?.username === 'rahul' ? 8.5 : studentProfile?.username === 'amit' ? 7.8 : 6.2) < selectedJob.minCgpa)" 
+        class="error-alert" 
+        style="margin-bottom: 0px;"
+      >
+        <span class="alert-icon">❌</span>
+        <span class="alert-text">
+          <strong>Ineligible:</strong> This role requires a minimum CGPA of <strong>{{ selectedJob.minCgpa }}</strong>. 
+          Your profile CGPA is <strong>{{ studentProfile?.username === 'rahul' ? 8.5 : studentProfile?.username === 'amit' ? 7.8 : 6.2 }}</strong>.
+        </span>
+      </div>
+
+      <div 
+        *ngIf="!((studentProfile?.username === 'rahul' ? 8.5 : studentProfile?.username === 'amit' ? 7.8 : 6.2) < selectedJob.minCgpa)" 
+        class="error-alert" 
+        style="background: rgba(16, 185, 129, 0.15); border-color: var(--success); color: #fff; margin-bottom: 0px;"
+      >
+        <span class="alert-icon">✅</span>
+        <span class="alert-text" style="color: #a7f3d0;">
+          <strong>Eligible:</strong> Your CGPA matches or exceeds the requirement for this role!
+        </span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: rgba(255, 255, 255, 0.02); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <div>
+          <span style="display: block; font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Location</span>
+          <span style="font-size: 0.9rem;">📍 {{ selectedJob.location }}</span>
+        </div>
+        <div>
+          <span style="display: block; font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Salary package</span>
+          <span style="font-size: 0.9rem;">💼 {{ selectedJob.salary }}</span>
+        </div>
+        <div>
+          <span style="display: block; font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Min CGPA eligibility</span>
+          <span style="font-size: 0.9rem;">🎓 {{ selectedJob.minCgpa }}</span>
+        </div>
+        <div>
+          <span style="display: block; font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Deadline date</span>
+          <span style="font-size: 0.9rem;">📅 {{ selectedJob.deadline | date:'mediumDate' }}</span>
+        </div>
+      </div>
+
+      <div>
+        <h4 style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.4rem;">Role Description</h4>
+        <p style="font-size: 0.9rem; color: var(--text-main); white-space: pre-line;">{{ selectedJob.description }}</p>
+      </div>
+
+      <div *ngIf="selectedJob.requirements">
+        <h4 style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.4rem;">Skills Requirements</h4>
+        <p style="font-size: 0.9rem; color: var(--text-main); white-space: pre-line;">{{ selectedJob.requirements }}</p>
+      </div>
+
+      <div style="display: flex; gap: 1rem; margin-top: 1rem; justify-content: flex-end;">
+        <button class="btn" (click)="closeJobModal()" style="background: rgba(255, 255, 255, 0.05);">
+          Cancel
+        </button>
+        <button 
+          class="btn btn-primary" 
+          (click)="applyJob(selectedJob)" 
+          [disabled]="((studentProfile?.username === 'rahul' ? 8.5 : studentProfile?.username === 'amit' ? 7.8 : 6.2) < selectedJob.minCgpa)"
+        >
+          Submit Application
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tracking / Timeline Modal -->
+<div *ngIf="selectedApplication" class="modal-overlay" (click)="closeAppModal()">
+  <div class="glass-card modal-content" (click)="$event.stopPropagation()" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3>Track Recruitment Status</h3>
+      <button class="btn-close" (click)="closeAppModal()">&times;</button>
+    </div>
+    
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+      <div>
+        <h4 style="font-family: var(--font-display); font-size: 1.25rem;">{{ selectedApplication.jobPosting?.title }}</h4>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">{{ selectedApplication.jobPosting?.company?.name }}</p>
+      </div>
+
+      <div class="timeline">
+        <!-- Step 1: APPLIED -->
+        <div class="timeline-item">
+          <div class="timeline-dot success">✓</div>
+          <div class="timeline-info">
+            <h4>Application Submitted</h4>
+            <p>Your application profile was sent successfully to HR.</p>
+            <span style="font-size: 0.7rem; color: var(--text-dim);">{{ selectedApplication.appliedAt | date:'medium' }}</span>
+          </div>
+        </div>
+
+        <!-- Step 2: SHORTLISTED -->
+        <div class="timeline-item">
+          <div class="timeline-dot" [ngClass]="{
+            'success': selectedApplication.status === 'SHORTLISTED' || selectedApplication.status === 'SELECTED',
+            'active': selectedApplication.status === 'APPLIED'
+          }">
+            {{ (selectedApplication.status === 'SHORTLISTED' || selectedApplication.status === 'SELECTED') ? '✓' : '2' }}
+          </div>
+          <div class="timeline-info">
+            <h4>HR Profile Review & Shortlisting</h4>
+            <p *ngIf="selectedApplication.status === 'APPLIED'">Your resume details are being evaluated by hiring managers.</p>
+            <p *ngIf="selectedApplication.status === 'SHORTLISTED' || selectedApplication.status === 'SELECTED'" style="color: var(--success); font-weight: 500;">
+              Congratulations! Your profile has been shortlisted for interview rounds!
+            </p>
+            <p *ngIf="selectedApplication.status === 'REJECTED'">Evaluated.</p>
+          </div>
+        </div>
+
+        <!-- Step 3: DECISION -->
+        <div class="timeline-item">
+          <div class="timeline-dot" [ngClass]="{
+            'success': selectedApplication.status === 'SELECTED',
+            'danger': selectedApplication.status === 'REJECTED',
+            'active': selectedApplication.status === 'SHORTLISTED'
+          }">
+            {{ selectedApplication.status === 'SELECTED' ? '✓' : selectedApplication.status === 'REJECTED' ? '✗' : '3' }}
+          </div>
+          <div class="timeline-info">
+            <h4>Hiring Decision Outcome</h4>
+            <p *ngIf="selectedApplication.status === 'APPLIED' || selectedApplication.status === 'SHORTLISTED'">Decision pending completion of review process.</p>
+            <p *ngIf="selectedApplication.status === 'SELECTED'" style="color: var(--success); font-weight: 600;">
+              🎉 Placed! The company has extended a formal job offer! Check mail for onboarding details.
+            </p>
+            <p *ngIf="selectedApplication.status === 'REJECTED'" style="color: var(--danger); font-weight: 600;">
+              Thank you for applying. The company chose to move forward with other candidates at this time.
+            </p>
+            <div *ngIf="selectedApplication.notes" style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); border-left: 2px solid var(--primary); font-size: 0.8rem; font-style: italic;">
+              "{{ selectedApplication.notes }}"
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

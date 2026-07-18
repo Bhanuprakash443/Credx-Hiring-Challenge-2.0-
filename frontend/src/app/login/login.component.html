@@ -1,0 +1,103 @@
+<div class="landing-page">
+  <!-- Top Navigation Bar -->
+  <nav class="landing-navbar">
+    <div class="nav-brand">
+      <span class="logo-icon">🎓</span>
+      <span class="logo-text">CampusRecruit</span>
+    </div>
+    <div class="nav-menu">
+      <a href="#features">Portals</a>
+      <a href="#analytics">Analytics</a>
+      <a href="#trusted">Companies</a>
+      <a href="#about">Placement Cell</a>
+    </div>
+    <div class="nav-cta">
+      <a href="http://localhost:8080/h2-console" target="_blank" class="nav-link-secondary">H2 Database Console</a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero-section">
+    <div class="hero-content">
+      <h1>Campus hiring reimagined: End-to-end virtual campus recruitment solutions</h1>
+      <p class="hero-subtitle">
+        Overcome campus hiring challenges by conducting virtual campus drives. Post roles, automate approvals, check CGPA eligibility thresholds, and track applications with real-time analytics.
+      </p>
+      <div class="hero-actions">
+        <button class="btn-hero-primary" (click)="quickLogin('student-rahul')">Apply Now (Rahul)</button>
+        <button class="btn-hero-secondary" (click)="quickLogin('admin')">Placement Cell Console</button>
+      </div>
+    </div>
+
+    <!-- Login Card (Matches Video Card on Right) -->
+    <div class="hero-card-container">
+      <div class="login-card-mettl">
+        <div class="card-header-mettl">
+          <h3>👤 Secure Login Portal</h3>
+          <p>Sign in using credentials or select a mock profile below</p>
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          <div class="form-group-mettl">
+            <input 
+              type="text" 
+              formControlName="username" 
+              placeholder="Username" 
+              [readonly]="loading"
+            />
+          </div>
+          <div class="form-group-mettl">
+            <input 
+              type="password" 
+              formControlName="password" 
+              placeholder="Password" 
+              [readonly]="loading"
+            />
+          </div>
+
+          <div *ngIf="errorMsg" class="error-alert-mettl">
+            ⚠️ {{ errorMsg }}
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" [disabled]="loginForm.invalid || loading">
+            <span *ngIf="loading" class="spinner" style="margin-right: 0.5rem; display: inline-block;"></span>
+            {{ loading ? 'Signing in...' : 'Sign In' }}
+          </button>
+        </form>
+
+        <div class="quick-roles-mettl">
+          <h4>⚡ Quick Role Selector</h4>
+          <div class="quick-grid-mettl">
+            <button class="btn-quick-mettl admin-q" (click)="quickLogin('admin')" [disabled]="loading">
+              🔑 Admin (Placement Cell)
+            </button>
+            <button class="btn-quick-mettl student-q-el" (click)="quickLogin('student-rahul')" [disabled]="loading">
+              🎓 Student: Rahul Sharma (CGPA 8.5)
+            </button>
+            <button class="btn-quick-mettl student-q-in" (click)="quickLogin('student-priya')" [disabled]="loading">
+              🎓 Student: Priya Patel (CGPA 6.2)
+            </button>
+            <button class="btn-quick-mettl company-q" (click)="quickLogin('company-tech')" [disabled]="loading">
+              🏢 Company: TechCorp Solutions
+            </button>
+            <button class="btn-quick-mettl company-q" (click)="quickLogin('company-innovate')" [disabled]="loading">
+              🏢 Company: InnovateSoft Labs
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Trusted By Footer Banner -->
+  <footer class="trusted-banner" id="trusted">
+    <span class="trusted-title">Trusted By:</span>
+    <div class="trusted-logos">
+      <span class="logo-item">💼 Microsoft</span>
+      <span class="logo-item">📦 Amazon</span>
+      <span class="logo-item">🛒 Flipkart</span>
+      <span class="logo-item">⚙️ Tech Mahindra</span>
+      <span class="logo-item">📐 Accenture</span>
+    </div>
+  </footer>
+</div>
