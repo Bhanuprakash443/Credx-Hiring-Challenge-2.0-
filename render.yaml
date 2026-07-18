@@ -1,15 +1,31 @@
 services:
   - type: web
     name: campus-recruiting-portal
-    env: java
+    env: docker
     plan: free
-    buildCommand: "npm run build"
-    startCommand: "java -jar backend/build_recruitment/libs/demo-0.0.1-SNAPSHOT.jar"
     envVars:
       - key: SPRING_DATASOURCE_URL
+        value: "jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}"
+      - key: SPRING_DATASOURCE_USERNAME
         fromDatabase:
           name: recruitment-db
-          property: jdbcConnectionString
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: recruitment-db
+          property: password
+      - key: DATABASE_HOST
+        fromDatabase:
+          name: recruitment-db
+          property: host
+      - key: DATABASE_PORT
+        fromDatabase:
+          name: recruitment-db
+          property: port
+      - key: DATABASE_NAME
+        fromDatabase:
+          name: recruitment-db
+          property: database
       - key: SPRING_DATASOURCE_DRIVER
         value: org.postgresql.Driver
       - key: SPRING_JPA_DIALECT
